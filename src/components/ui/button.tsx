@@ -9,15 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        default: "bg-primary text-primary-foreground hover:bg-primary-hover transition-all duration-300",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Variantes oceânicas personalizadas
+        ocean: "bg-gradient-ocean text-white hover:shadow-ocean hover:scale-105 transition-all duration-300",
+        wave: "bg-gradient-surface text-foreground hover:shadow-wave hover:translate-y-[-2px] transition-all duration-300",
+        deep: "bg-gradient-deep text-white hover:shadow-deep transition-all duration-500",
+        coral: "bg-gradient-coral text-white hover:shadow-lg transition-all duration-300"
       },
       size: {
         default: "h-10 px-4 py-2",
