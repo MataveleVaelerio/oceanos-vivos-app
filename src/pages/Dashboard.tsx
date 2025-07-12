@@ -2,6 +2,7 @@ import { useState } from "react";
 import { OceanHeader } from "@/components/OceanHeader";
 import { SubjectCard } from "@/components/SubjectCard";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { SubjectDetail } from "@/components/SubjectDetail";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Waves, Fish, Mountain, Beaker, TrendingUp, BookOpen, MessageSquare } from "lucide-react";
@@ -51,7 +52,8 @@ const subjects = [
 ];
 
 export const Dashboard = () => {
-  const [userProgress] = useState({
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [userProgress, setUserProgress] = useState({
     currentLevel: "Aprendiz do Mar",
     nextLevel: "Guardião Costeiro", 
     currentPoints: 165,
@@ -61,9 +63,26 @@ export const Dashboard = () => {
   });
 
   const handleSubjectStart = (subjectId: string) => {
-    console.log(`Iniciando estudo de: ${subjectId}`);
-    // Aqui será implementada a navegação para a área específica
+    setSelectedSubject(subjectId);
   };
+
+  const handlePointsEarned = (points: number) => {
+    setUserProgress(prev => ({
+      ...prev,
+      currentPoints: prev.currentPoints + points,
+      totalLessonsCompleted: prev.totalLessonsCompleted + 1
+    }));
+  };
+
+  if (selectedSubject) {
+    return (
+      <SubjectDetail
+        subjectId={selectedSubject}
+        onBack={() => setSelectedSubject(null)}
+        onPointsEarned={handlePointsEarned}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
