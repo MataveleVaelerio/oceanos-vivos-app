@@ -5,7 +5,7 @@ import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { SubjectDetail } from "@/components/SubjectDetail";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Waves, Fish, Mountain, Beaker, TrendingUp, BookOpen, MessageSquare } from "lucide-react";
+import { Waves, Fish, Mountain, Beaker, TrendingUp, BookOpen, MessageSquare, Users } from "lucide-react";
 import heroImage from "@/assets/hero-ocean.jpg";
 
 const subjects = [
@@ -188,9 +188,17 @@ export const Dashboard = () => {
                   <BookOpen className="mr-2 h-4 w-4" />
                   Quiz Diário
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Fórum da Turma
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <a href="/social">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Fórum da Turma
+                  </a>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <a href="/social">
+                    <Users className="mr-2 h-4 w-4" />
+                    Rede Social
+                  </a>
                 </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Fish className="mr-2 h-4 w-4" />
