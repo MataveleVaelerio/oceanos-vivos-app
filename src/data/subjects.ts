@@ -830,6 +830,14 @@ Se evaporasses toda a água do Canal de Moçambique, ficarias com uma camada de 
   ]
 };
 
+// Array principal de disciplinas exportado
+export const subjects: Subject[] = [
+  oceanografiaFisica,
+  oceanografiaBiologica,
+  oceanografiaGeologica,
+  oceanografiaQuimica
+];
+
 export const subjectsData = {
   fisica: oceanografiaFisica,
   biologica: oceanografiaBiologica,

@@ -1,58 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { OceanHeader } from "@/components/OceanHeader";
 import { SubjectCard } from "@/components/SubjectCard";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { SubjectDetail } from "@/components/SubjectDetail";
+import { AuthForm } from "@/components/auth/AuthForm";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Waves, Fish, Mountain, Beaker, TrendingUp, BookOpen, MessageSquare, Users } from "lucide-react";
+import { Waves, Fish, Mountain, Beaker, TrendingUp, BookOpen, MessageSquare, Users, LogOut } from "lucide-react";
+import { subjects } from "@/data/subjects";
 import heroImage from "@/assets/hero-ocean.jpg";
 
-const subjects = [
-  {
-    id: "fisica",
-    title: "Oceanografia Física",
-    description: "Explore as propriedades físicas do oceano: ondas, marés, correntes e temperatura. Descubra como estes fenômenos influenciam a vida marinha e o clima em Moçambique.",
-    icon: Waves,
-    color: "ocean" as const,
-    progress: 15,
-    totalLessons: 12,
-    completedLessons: 2
-  },
-  {
-    id: "biologica", 
-    title: "Oceanografia Biológica",
-    description: "Mergulhe no mundo da vida marinha: plâncton, peixes, corais e ecossistemas. Aprenda sobre a biodiversidade única do Canal de Moçambique.",
-    icon: Fish,
-    color: "wave" as const,
-    progress: 30,
-    totalLessons: 15,
-    completedLessons: 4
-  },
-  {
-    id: "geologica",
-    title: "Oceanografia Geológica", 
-    description: "Entenda a formação dos fundos oceânicos, sedimentos e a geologia costeira. Descubra como se formaram as ilhas e costas moçambicanas.",
-    icon: Mountain,
-    color: "deep" as const,
-    progress: 8,
-    totalLessons: 10,
-    completedLessons: 1
-  },
-  {
-    id: "quimica",
-    title: "Oceanografia Química",
-    description: "Analise a composição química da água do mar, nutrientes e poluição. Compreenda os impactos ambientais nas águas costeiras.",
-    icon: Beaker,
-    color: "coral" as const,
-    progress: 0,
-    totalLessons: 8,
-    completedLessons: 0
-  }
-];
 
 export const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [userProgress, setUserProgress] = useState({
     currentLevel: "Aprendiz do Mar",
     nextLevel: "Guardião Costeiro", 
@@ -62,17 +23,54 @@ export const Dashboard = () => {
     quizzesCompleted: 12
   });
 
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const userData = JSON.parse(savedUser);
+      setUser(userData);
+      setUserProgress(prev => ({
+        ...prev,
+        currentPoints: userData.pontos || 165
+      }));
+    }
+  }, []);
+
+  const handleAuth = (userData: any) => {
+    setUser(userData);
+    setUserProgress(prev => ({
+      ...prev,
+      currentPoints: userData.pontos || 0
+    }));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
   const handleSubjectStart = (subjectId: string) => {
     setSelectedSubject(subjectId);
   };
 
   const handlePointsEarned = (points: number) => {
+    const newPoints = userProgress.currentPoints + points;
     setUserProgress(prev => ({
       ...prev,
-      currentPoints: prev.currentPoints + points,
+      currentPoints: newPoints,
       totalLessonsCompleted: prev.totalLessonsCompleted + 1
     }));
+    
+    // Update user in localStorage
+    if (user) {
+      const updatedUser = { ...user, pontos: newPoints };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
   };
+
+  if (!user) {
+    return <AuthForm onAuth={handleAuth} />;
+  }
 
   if (selectedSubject) {
     return (
@@ -88,9 +86,23 @@ export const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <OceanHeader 
         userPoints={userProgress.currentPoints}
-        userName="Ana Mondlane" 
+        userName={user.nome} 
         notifications={3}
       />
+      
+      {/* User Header */}
+      <div className="bg-card/50 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-semibold text-primary">Bem-vindo, {user.nome}!</h2>
+            <p className="text-sm text-muted-foreground">{user.universidade} - {user.curso}</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sair
+          </Button>
+        </div>
+      </div>
       
       {/* Hero Section */}
       <section className="relative h-64 overflow-hidden">
@@ -133,11 +145,11 @@ export const Dashboard = () => {
                     key={subject.id}
                     title={subject.title}
                     description={subject.description}
-                    icon={subject.icon}
-                    progress={subject.progress}
+                    icon={subject.icon === "waves" ? Waves : subject.icon === "fish" ? Fish : subject.icon === "mountain" ? Mountain : Beaker}
+                    progress={Math.floor(Math.random() * 30)}
                     totalLessons={subject.totalLessons}
-                    completedLessons={subject.completedLessons}
-                    color={subject.color}
+                    completedLessons={Math.floor(Math.random() * 5)}
+                    color={subject.color as any}
                     onStart={() => handleSubjectStart(subject.id)}
                   />
                 ))}
