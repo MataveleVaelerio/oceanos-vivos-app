@@ -4,23 +4,28 @@ import { SubjectCard } from "@/components/SubjectCard";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { SubjectDetail } from "@/components/SubjectDetail";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { DailyQuiz } from "@/components/DailyQuiz";
+import { WeeklyChallenge } from "@/components/WeeklyChallenge";
+import { MarineGlossary } from "@/components/MarineGlossary";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Waves, Fish, Mountain, Beaker, TrendingUp, BookOpen, MessageSquare, Users, LogOut } from "lucide-react";
+import { Waves, Fish, Mountain, Beaker, TrendingUp, BookOpen, MessageSquare, Users, LogOut, Bell, Target } from "lucide-react";
 import { subjects } from "@/data/subjects";
 import heroImage from "@/assets/hero-ocean.jpg";
 
 
 export const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<'dashboard' | 'quiz' | 'challenge' | 'glossary' | 'notifications'>('dashboard');
   const [user, setUser] = useState<any>(null);
   const [userProgress, setUserProgress] = useState({
     currentLevel: "Aprendiz do Mar",
     nextLevel: "Guardião Costeiro", 
-    currentPoints: 165,
-    pointsToNext: 85,
-    totalLessonsCompleted: 7,
-    quizzesCompleted: 12
+    currentPoints: 0,
+    pointsToNext: 150,
+    totalLessonsCompleted: 0,
+    quizzesCompleted: 0
   });
 
   useEffect(() => {
@@ -36,11 +41,22 @@ export const Dashboard = () => {
   }, []);
 
   const handleAuth = (userData: any) => {
+    // Reset progress for new users
+    const newUserProgress = {
+      currentLevel: "Aprendiz do Mar",
+      nextLevel: "Guardião Costeiro", 
+      currentPoints: 0,
+      pointsToNext: 150,
+      totalLessonsCompleted: 0,
+      quizzesCompleted: 0
+    };
+    
     setUser(userData);
-    setUserProgress(prev => ({
-      ...prev,
-      currentPoints: userData.pontos || 0
-    }));
+    setUserProgress(newUserProgress);
+    
+    // Save reset progress to localStorage
+    const updatedUser = { ...userData, pontos: 0 };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
   };
 
   const handleLogout = () => {
@@ -82,12 +98,29 @@ export const Dashboard = () => {
     );
   }
 
+  if (currentView === 'quiz') {
+    return <DailyQuiz onBack={() => setCurrentView('dashboard')} onComplete={handlePointsEarned} />;
+  }
+
+  if (currentView === 'challenge') {
+    return <WeeklyChallenge onBack={() => setCurrentView('dashboard')} onComplete={handlePointsEarned} />;
+  }
+
+  if (currentView === 'glossary') {
+    return <MarineGlossary onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'notifications') {
+    return <NotificationCenter onBack={() => setCurrentView('dashboard')} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <OceanHeader 
         userPoints={userProgress.currentPoints}
         userName={user.nome} 
         notifications={3}
+        onNotificationClick={() => setCurrentView('notifications')}
       />
       
       {/* User Header */}
@@ -196,15 +229,13 @@ export const Dashboard = () => {
                 <CardTitle className="text-lg">Ações Rápidas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => setCurrentView('quiz')}>
                   <BookOpen className="mr-2 h-4 w-4" />
                   Quiz Diário
                 </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
-                  <a href="/social">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Fórum da Turma
-                  </a>
+                <Button variant="outline" className="w-full justify-start" onClick={() => setCurrentView('challenge')}>
+                  <Target className="mr-2 h-4 w-4" />
+                  Desafio Semanal
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <a href="/social">
@@ -212,7 +243,7 @@ export const Dashboard = () => {
                     Rede Social
                   </a>
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => setCurrentView('glossary')}>
                   <Fish className="mr-2 h-4 w-4" />
                   Glossário Marinho
                 </Button>
