@@ -6,12 +6,14 @@ interface OceanHeaderProps {
   userPoints?: number;
   userName?: string;
   notifications?: number;
+  onNotificationClick?: () => void;
 }
 
 export const OceanHeader = ({ 
   userPoints = 0, 
   userName = "Estudante", 
-  notifications = 0 
+  notifications = 0,
+  onNotificationClick
 }: OceanHeaderProps) => {
   return (
     <header className="bg-gradient-ocean shadow-ocean border-b border-accent/20">
@@ -41,7 +43,7 @@ export const OceanHeader = ({
             </div>
 
             {/* Notificações */}
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 relative">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 relative" onClick={onNotificationClick}>
               <Bell className="h-5 w-5" />
               {notifications > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-coral text-xs">
