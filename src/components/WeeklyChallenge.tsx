@@ -8,6 +8,7 @@ import { ArrowLeft, Target, Calendar, Award, Clock, Users } from "lucide-react";
 interface WeeklyChallengeProps {
   onBack: () => void;
   onComplete: (points: number) => void;
+  userProgress: any;
 }
 
 interface Challenge {
@@ -22,7 +23,7 @@ interface Challenge {
   category: string;
 }
 
-export const WeeklyChallenge = ({ onBack, onComplete }: WeeklyChallengeProps) => {
+export const WeeklyChallenge = ({ onBack, onComplete, userProgress }: WeeklyChallengeProps) => {
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
   const [completedTasks, setCompletedTasks] = useState<boolean[]>([]);
   const [challengeCompleted, setChallengeCompleted] = useState(false);

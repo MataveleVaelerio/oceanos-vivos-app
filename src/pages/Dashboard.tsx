@@ -90,11 +90,14 @@ export const Dashboard = () => {
 
   if (selectedSubject) {
     return (
-      <SubjectDetail
-        subjectId={selectedSubject}
-        onBack={() => setSelectedSubject(null)}
-        onPointsEarned={handlePointsEarned}
-      />
+        <SubjectDetail
+          subjectId={selectedSubject}
+          onBack={() => setSelectedSubject(null)}
+          onPointsEarned={handlePointsEarned}
+          userPoints={userProgress.points}
+          userName={user.name}
+          onNotificationClick={() => setCurrentView('notifications')}
+        />
     );
   }
 

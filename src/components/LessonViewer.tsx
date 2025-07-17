@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Lesson, Question } from "@/data/subjects";
-import { ArrowLeft, Clock, Award, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Clock, Award, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { QuizTimer } from "./QuizTimer";
+import { toast } from "@/hooks/use-toast";
 
 interface LessonViewerProps {
   lesson: Lesson;
@@ -19,12 +21,33 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
   const [quizResults, setQuizResults] = useState<boolean[]>([]);
   const [showExplanation, setShowExplanation] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [timeUp, setTimeUp] = useState(false);
+  const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number>(0);
+
+  // Função para embaralhar opções de resposta
+  const shuffleOptions = (question: Question) => {
+    const originalOptions = [...question.options];
+    const shuffled = [...originalOptions].sort(() => Math.random() - 0.5);
+    const newCorrectIndex = shuffled.findIndex(option => option === originalOptions[question.correctAnswer]);
+    
+    setShuffledOptions(shuffled);
+    setCorrectAnswerIndex(newCorrectIndex);
+  };
 
   const handleStartQuiz = () => {
+    if (lesson.quiz && lesson.quiz.questions.length > 0) {
+      shuffleOptions(lesson.quiz.questions[0]);
+    }
     setShowQuiz(true);
     setCurrentQuestion(0);
     setQuizResults([]);
     setQuizCompleted(false);
+    setTimeUp(false);
+    toast({
+      title: "Quiz Iniciado! ⏰",
+      description: "Você tem 5 minutos para completar o quiz.",
+    });
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -32,10 +55,9 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
   };
 
   const handleSubmitAnswer = () => {
-    if (selectedAnswer === null || !lesson.quiz) return;
+    if (selectedAnswer === null || !lesson.quiz || timeUp) return;
 
-    const question = lesson.quiz.questions[currentQuestion];
-    const isCorrect = selectedAnswer === question.correctAnswer;
+    const isCorrect = selectedAnswer === correctAnswerIndex;
     
     setQuizResults([...quizResults, isCorrect]);
     setShowExplanation(true);
@@ -48,13 +70,39 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
     setSelectedAnswer(null);
 
     if (currentQuestion < lesson.quiz.questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+      const nextQuestion = currentQuestion + 1;
+      setCurrentQuestion(nextQuestion);
+      shuffleOptions(lesson.quiz.questions[nextQuestion]);
     } else {
-      setQuizCompleted(true);
-      const correctAnswers = quizResults.filter(result => result).length;
-      const totalPoints = correctAnswers * 10; // 10 pontos por resposta correta
-      onComplete(lesson.points + totalPoints);
+      handleQuizComplete();
     }
+  };
+
+  const handleQuizComplete = () => {
+    setQuizCompleted(true);
+    const correctAnswers = quizResults.filter(result => result).length;
+    const totalPoints = correctAnswers * 5; // Reduzido de 10 para 5 pontos por resposta
+    
+    toast({
+      title: "Quiz Concluído com Sucesso! 🎉",
+      description: `Você acertou ${correctAnswers} de ${lesson.quiz?.questions.length} questões e ganhou ${lesson.points + totalPoints} pontos!`,
+    });
+    
+    onComplete(lesson.points + totalPoints);
+  };
+
+  const handleTimeUp = () => {
+    setTimeUp(true);
+    setShowExplanation(true);
+    toast({
+      title: "Tempo Esgotado! ⏰",
+      description: "O quiz será finalizado automaticamente.",
+      variant: "destructive",
+    });
+    
+    setTimeout(() => {
+      handleQuizComplete();
+    }, 2000);
   };
 
   const renderContent = () => {
@@ -93,14 +141,22 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
                 <div>
                   <CardTitle className="flex items-center">
                     🧠 Quiz: {lesson.title}
+                    {timeUp && <AlertCircle className="ml-2 h-5 w-5 text-red-500" />}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
                     Questão {currentQuestion + 1} de {lesson.quiz.questions.length}
                   </p>
                 </div>
-                <Badge variant={question.difficulty === 'básico' ? 'secondary' : question.difficulty === 'médio' ? 'default' : 'destructive'}>
-                  {question.difficulty}
-                </Badge>
+                <div className="flex items-center space-x-3">
+                  <QuizTimer 
+                    duration={300} // 5 minutos
+                    onTimeUp={handleTimeUp}
+                    isActive={!timeUp && !quizCompleted}
+                  />
+                  <Badge variant={question.difficulty === 'básico' ? 'secondary' : question.difficulty === 'médio' ? 'default' : 'destructive'}>
+                    {question.difficulty}
+                  </Badge>
+                </div>
               </div>
               <Progress value={((currentQuestion + 1) / lesson.quiz.questions.length) * 100} className="mt-4" />
             </CardHeader>
@@ -109,16 +165,16 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
               <h3 className="text-lg font-medium">{question.question}</h3>
               
               <div className="space-y-3">
-                {question.options.map((option, index) => (
+                {shuffledOptions.map((option, index) => (
                   <Card 
                     key={index}
                     className={`p-4 cursor-pointer transition-all ${
                       selectedAnswer === index 
                         ? 'border-primary bg-primary/5' 
                         : 'hover:bg-muted/50'
-                    } ${showExplanation && index === question.correctAnswer ? 'border-green-500 bg-green-50' : ''}
-                    ${showExplanation && selectedAnswer === index && index !== question.correctAnswer ? 'border-red-500 bg-red-50' : ''}`}
-                    onClick={() => !showExplanation && handleAnswerSelect(index)}
+                    } ${showExplanation && index === correctAnswerIndex ? 'border-green-500 bg-green-50' : ''}
+                    ${showExplanation && selectedAnswer === index && index !== correctAnswerIndex ? 'border-red-500 bg-red-50' : ''}`}
+                    onClick={() => !showExplanation && !timeUp && handleAnswerSelect(index)}
                   >
                     <div className="flex items-center space-x-3">
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
@@ -127,10 +183,10 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
                         {selectedAnswer === index && <CheckCircle className="w-4 h-4" />}
                       </div>
                       <span>{option}</span>
-                      {showExplanation && index === question.correctAnswer && (
+                      {showExplanation && index === correctAnswerIndex && (
                         <CheckCircle className="w-5 h-5 text-green-600 ml-auto" />
                       )}
-                      {showExplanation && selectedAnswer === index && index !== question.correctAnswer && (
+                      {showExplanation && selectedAnswer === index && index !== correctAnswerIndex && (
                         <XCircle className="w-5 h-5 text-red-600 ml-auto" />
                       )}
                     </div>
@@ -154,13 +210,13 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
                 </Button>
                 
                 {!showExplanation ? (
-                  <Button 
-                    variant="ocean" 
-                    onClick={handleSubmitAnswer} 
-                    disabled={selectedAnswer === null}
-                  >
-                    Confirmar Resposta
-                  </Button>
+                <Button 
+                  variant="ocean" 
+                  onClick={handleSubmitAnswer} 
+                  disabled={selectedAnswer === null || timeUp}
+                >
+                  {timeUp ? 'Tempo Esgotado' : 'Confirmar Resposta'}
+                </Button>
                 ) : (
                   <Button variant="ocean" onClick={handleNextQuestion}>
                     {currentQuestion < lesson.quiz.questions.length - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
@@ -178,7 +234,7 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
     const correctAnswers = quizResults.filter(result => result).length;
     const totalQuestions = lesson.quiz.questions.length;
     const percentage = (correctAnswers / totalQuestions) * 100;
-    const earnedPoints = lesson.points + (correctAnswers * 10);
+    const earnedPoints = lesson.points + (correctAnswers * 5); // Reduzido para 5 pontos
 
     return (
       <div className="min-h-screen bg-background p-4">
@@ -187,8 +243,11 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
             <CardContent className="p-8 text-center">
               <div className="mb-6">
                 <Award className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-                <h2 className="text-3xl font-bold mb-2">Quiz Concluído! 🎉</h2>
-                <p className="text-muted-foreground">Parabéns por completar o quiz sobre {lesson.title}</p>
+                <h2 className="text-3xl font-bold mb-2">✅ Quiz Concluído com Sucesso! 🎉</h2>
+                <p className="text-muted-foreground">
+                  Parabéns por completar o quiz sobre {lesson.title}
+                  {timeUp && " (tempo esgotado)"}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -260,9 +319,9 @@ export const LessonViewer = ({ lesson, onBack, onComplete }: LessonViewerProps) 
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold mb-2">Lição Concluída!</h3>
+                <h3 className="font-semibold mb-2">✅ Lição Concluída com Sucesso!</h3>
                 <p className="text-sm text-muted-foreground">
-                  Ganhou {lesson.points} pontos por ler esta lição
+                  Ganhe {lesson.points} pontos ao concluir esta lição
                 </p>
               </div>
               

@@ -3,8 +3,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Clock, Award, CheckCircle, XCircle, Calendar } from "lucide-react";
+import { ArrowLeft, Clock, Award, CheckCircle, XCircle, Calendar, AlertTriangle } from "lucide-react";
 import { subjects } from "@/data/subjects";
+import { QuizTimer } from "./QuizTimer";
+import { toast } from "@/hooks/use-toast";
 
 interface DailyQuizProps {
   onBack: () => void;
@@ -18,6 +20,7 @@ export const DailyQuiz = ({ onBack, onComplete }: DailyQuizProps) => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [dailyQuestions, setDailyQuestions] = useState<any[]>([]);
+  const [timeUp, setTimeUp] = useState(false);
 
   useEffect(() => {
     generateDailyQuiz();
@@ -77,11 +80,35 @@ export const DailyQuiz = ({ onBack, onComplete }: DailyQuizProps) => {
     if (currentQuestion < dailyQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      setQuizCompleted(true);
-      const correctAnswers = quizResults.filter(result => result).length;
-      const totalPoints = correctAnswers * 15; // 15 pontos por resposta correta no quiz diário
-      onComplete(totalPoints);
+      handleQuizComplete();
     }
+  };
+
+  const handleQuizComplete = () => {
+    setQuizCompleted(true);
+    const correctAnswers = quizResults.filter(result => result).length;
+    const totalPoints = correctAnswers * 8; // Reduzido de 15 para 8 pontos
+    
+    toast({
+      title: "Quiz Diário Concluído! 🎉",
+      description: `Você acertou ${correctAnswers} de ${dailyQuestions.length} questões e ganhou ${totalPoints} pontos!`,
+    });
+    
+    onComplete(totalPoints);
+  };
+
+  const handleTimeUp = () => {
+    setTimeUp(true);
+    setShowExplanation(true);
+    toast({
+      title: "Tempo Esgotado! ⏰",
+      description: "O quiz diário será finalizado automaticamente.",
+      variant: "destructive",
+    });
+    
+    setTimeout(() => {
+      handleQuizComplete();
+    }, 2000);
   };
 
   if (dailyQuestions.length === 0) {
@@ -101,7 +128,7 @@ export const DailyQuiz = ({ onBack, onComplete }: DailyQuizProps) => {
     const correctAnswers = quizResults.filter(result => result).length;
     const totalQuestions = dailyQuestions.length;
     const percentage = (correctAnswers / totalQuestions) * 100;
-    const earnedPoints = correctAnswers * 15;
+    const earnedPoints = correctAnswers * 8; // Reduzido para 8 pontos
 
     return (
       <div className="min-h-screen bg-background p-4">
@@ -110,8 +137,11 @@ export const DailyQuiz = ({ onBack, onComplete }: DailyQuizProps) => {
             <CardContent className="p-8 text-center">
               <div className="mb-6">
                 <Award className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-                <h2 className="text-3xl font-bold mb-2">Quiz Diário Concluído! 🎉</h2>
-                <p className="text-muted-foreground">Parabéns por completar o desafio de hoje</p>
+                <h2 className="text-3xl font-bold mb-2">✅ Quiz Diário Concluído com Sucesso! 🎉</h2>
+                <p className="text-muted-foreground">
+                  Parabéns por completar o desafio de hoje
+                  {timeUp && " (tempo esgotado)"}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -157,14 +187,22 @@ export const DailyQuiz = ({ onBack, onComplete }: DailyQuizProps) => {
                 <CardTitle className="flex items-center">
                   <Calendar className="mr-2 h-5 w-5" />
                   Quiz Diário - {new Date().toLocaleDateString('pt-PT')}
+                  {timeUp && <AlertTriangle className="ml-2 h-5 w-5 text-red-500" />}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   Questão {currentQuestion + 1} de {dailyQuestions.length} • {question.subject}
                 </p>
               </div>
-              <Badge variant={question.difficulty === 'básico' ? 'secondary' : question.difficulty === 'médio' ? 'default' : 'destructive'}>
-                {question.difficulty}
-              </Badge>
+              <div className="flex items-center space-x-3">
+                <QuizTimer 
+                  duration={300} // 5 minutos
+                  onTimeUp={handleTimeUp}
+                  isActive={!timeUp && !quizCompleted}
+                />
+                <Badge variant={question.difficulty === 'básico' ? 'secondary' : question.difficulty === 'médio' ? 'default' : 'destructive'}>
+                  {question.difficulty}
+                </Badge>
+              </div>
             </div>
             <Progress value={((currentQuestion + 1) / dailyQuestions.length) * 100} className="mt-4" />
           </CardHeader>
@@ -184,7 +222,7 @@ export const DailyQuiz = ({ onBack, onComplete }: DailyQuizProps) => {
                       : 'hover:bg-muted/50'
                   } ${showExplanation && index === question.correctAnswer ? 'border-green-500 bg-green-50' : ''}
                   ${showExplanation && selectedAnswer === index && index !== question.correctAnswer ? 'border-red-500 bg-red-50' : ''}`}
-                  onClick={() => !showExplanation && handleAnswerSelect(index)}
+                  onClick={() => !showExplanation && !timeUp && handleAnswerSelect(index)}
                 >
                   <div className="flex items-center space-x-3">
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
@@ -225,9 +263,9 @@ export const DailyQuiz = ({ onBack, onComplete }: DailyQuizProps) => {
                 <Button 
                   variant="ocean" 
                   onClick={handleSubmitAnswer} 
-                  disabled={selectedAnswer === null}
+                  disabled={selectedAnswer === null || timeUp}
                 >
-                  Confirmar Resposta
+                  {timeUp ? 'Tempo Esgotado' : 'Confirmar Resposta'}
                 </Button>
               ) : (
                 <Button variant="ocean" onClick={handleNextQuestion}>

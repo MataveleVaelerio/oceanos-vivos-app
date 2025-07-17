@@ -6,15 +6,19 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Clock, Award, BookOpen, Brain } from "lucide-react";
+import { ArrowLeft, Clock, Award, BookOpen, Brain, Lock, CheckCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface SubjectDetailProps {
   subjectId: string;
   onBack: () => void;
   onPointsEarned: (points: number) => void;
+  userPoints?: number;
+  userName?: string;
+  onNotificationClick?: () => void;
 }
 
-export const SubjectDetail = ({ subjectId, onBack, onPointsEarned }: SubjectDetailProps) => {
+export const SubjectDetail = ({ subjectId, onBack, onPointsEarned, userPoints, userName, onNotificationClick }: SubjectDetailProps) => {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
 
@@ -33,6 +37,10 @@ export const SubjectDetail = ({ subjectId, onBack, onPointsEarned }: SubjectDeta
           setCompletedLessons([...completedLessons, selectedLesson.id]);
           setSelectedLesson(null);
           onPointsEarned(points);
+          toast({
+            title: "Lição Concluída! ✅",
+            description: `Próxima lição desbloqueada! +${points} pontos`,
+          });
         }}
       />
     );
@@ -42,7 +50,12 @@ export const SubjectDetail = ({ subjectId, onBack, onPointsEarned }: SubjectDeta
 
   return (
     <div className="min-h-screen bg-background">
-      <OceanHeader userPoints={250} userName="Ana Mondlane" notifications={3} />
+      <OceanHeader 
+        userPoints={userPoints} 
+        userName={userName} 
+        notifications={3} 
+        onNotificationClick={onNotificationClick}
+      />
       
       <div className="max-w-6xl mx-auto p-4 pt-8">
         {/* Header da Disciplina */}
@@ -104,8 +117,18 @@ export const SubjectDetail = ({ subjectId, onBack, onPointsEarned }: SubjectDeta
                           {isCompleted ? '✓' : index + 1}
                         </div>
                         <h3 className="text-xl font-semibold">{lesson.title}</h3>
-                        {isLocked && <Badge variant="secondary">🔒 Bloqueada</Badge>}
-                        {isCompleted && <Badge variant="default" className="bg-green-500">✅ Concluída</Badge>}
+                        {isLocked && (
+                          <Badge variant="secondary" className="bg-gray-200">
+                            <Lock className="mr-1 h-3 w-3" />
+                            Bloqueada
+                          </Badge>
+                        )}
+                        {isCompleted && (
+                          <Badge variant="default" className="bg-green-500">
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Concluída
+                          </Badge>
+                        )}
                       </div>
                       
                       <p className="text-muted-foreground mb-4 ml-11">{lesson.description}</p>
@@ -146,7 +169,17 @@ export const SubjectDetail = ({ subjectId, onBack, onPointsEarned }: SubjectDeta
                       <Button 
                         variant={isCompleted ? "secondary" : "ocean"}
                         disabled={isLocked}
-                        onClick={() => setSelectedLesson(lesson)}
+                        onClick={() => {
+                          if (isLocked) {
+                            toast({
+                              title: "Lição Bloqueada 🔒",
+                              description: "Conclua a lição anterior para desbloquear esta.",
+                              variant: "destructive",
+                            });
+                          } else {
+                            setSelectedLesson(lesson);
+                          }
+                        }}
                         className="min-w-[120px]"
                       >
                         {isCompleted ? 'Revisar' : isLocked ? 'Bloqueada' : 'Estudar'}

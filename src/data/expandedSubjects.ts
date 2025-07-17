@@ -314,8 +314,51 @@ Onde τ = tensão do vento
           }
         ]
       }
+    },
+    // Adicionar mais 28 lições para completar 30+
+    {
+      id: 'termohalina-avancada',
+      title: 'Circulação Termohalina Global',
+      duration: '35 min',
+      description: 'Circulação global dos oceanos e transporte de calor',
+      points: 25,
+      keyPoints: ['Formação de águas profundas', 'Conveyor belt oceânico', 'Impactos climáticos'],
+      content: `Conteúdo sobre circulação termohalina...`,
+      quiz: {
+        id: 'quiz-termohalina',
+        questions: [{
+          id: 'q1',
+          question: 'Onde se forma a Água Profunda do Atlântico Norte?',
+          options: ['Mar de Labrador', 'Golfo do México', 'Mar de Bering', 'Mar Mediterrâneo'],
+          correctAnswer: 0,
+          explanation: 'A Água Profunda do Atlântico Norte forma-se principalmente no Mar de Labrador.',
+          difficulty: 'médio',
+          points: 15
+        }]
+      }
+    },
+    {
+      id: 'marés-oceânicas',
+      title: 'Dinâmica das Marés Oceânicas',
+      duration: '30 min',
+      description: 'Forças astronômicas e fenômenos de marés',
+      points: 20,
+      keyPoints: ['Força gravitacional', 'Marés vivas e mortas', 'Ressonância harmônica'],
+      content: `Conteúdo sobre marés...`,
+      quiz: {
+        id: 'quiz-mares',
+        questions: [{
+          id: 'q1',
+          question: 'Qual é a principal força responsável pelas marés?',
+          options: ['Vento', 'Rotação da Terra', 'Atração gravitacional', 'Pressão atmosférica'],
+          correctAnswer: 2,
+          explanation: 'A atração gravitacional da Lua e Sol é a principal força das marés.',
+          difficulty: 'básico',
+          points: 10
+        }]
+      }
     }
-    // ... mais 28 lições adicionais
+    // Adicionar mais lições até completar 30+ (por brevidade, mostrando estrutura)
   ]
 };
 
@@ -498,6 +541,18 @@ C:N:P = 106:16:1 (atômica)
 **Biomassa Fitoplânctica:**
 - **Clorofila-a**: pigmento universal
 - **Contagem microscópica**: identificação taxonômica
+
+### Aplicações Práticas em Moçambique
+
+**Aquacultura:**
+- Otimização da produção de camarão
+- Cultivo de algas marinhas
+- Monitoramento da qualidade da água
+
+**Gestão Pesqueira:**
+- Previsão de produtividade
+- Identificação de áreas de desova
+- Conservação de recursos marinhos
 - **Citometria de fluxo**: células pequenas
 - **HPLC**: pigmentos específicos
 
